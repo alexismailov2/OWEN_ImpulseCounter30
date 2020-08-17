@@ -1,6 +1,7 @@
 #include "SerialPort.hpp"
 
 #include <iostream>
+#include <string>
 
 SerialPort::SerialPort(std::string const& portPath, uint32_t baudrate)
   : _io{}
@@ -16,7 +17,7 @@ void SerialPort::SendCommand(std::string const& data, SerialPort::tResponseCallb
   boost::system::error_code errorCode;
   bool readError{true};
   std::string responseData(256, '\0');
-  _port.async_read_some(boost::asio::buffer(responseData), [&](boost::system::error_code const& error, size_t bytes_transferred) {
+  _port.async_read_some(boost::asio::buffer(responseData.data(), responseData.size()), [&](boost::system::error_code const& error, size_t bytes_transferred) {
     readError = (error || (bytes_transferred == 0));
     _timer.cancel();
     responseData.resize(bytes_transferred);

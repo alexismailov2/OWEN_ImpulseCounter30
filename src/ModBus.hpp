@@ -32,7 +32,7 @@ public:
 
   auto ReadHoldingRegisters(uint16_t startRegisterAddress, uint16_t count, uint16_t timeoutMs = 1000) -> std::vector<uint16_t>;
 
-  auto Function_0x04(uint16_t startRegisterAddress, uint16_t count, uint8_t timeoutMs = 1000) -> std::vector<uint16_t>
+  auto Function_0x04(uint16_t startRegisterAddress, uint16_t count, uint16_t timeoutMs = 1000) -> std::vector<uint16_t>
   {
     return ReadInputRegisters(startRegisterAddress, count, timeoutMs);
   }

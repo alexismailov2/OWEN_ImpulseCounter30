@@ -8,7 +8,7 @@ if ("${LIBRARY_INSTALL_DESTINATION}" STREQUAL "")
    set(LIBRARY_INSTALL_DESTINATION ${CMAKE_SOURCE_DIR}/host)
 endif()
 
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED system)
 
 add_definitions(-DDEBUG_INFO=1)
 
@@ -26,6 +26,9 @@ add_library(${PROJECT_NAME}
         src/ModBus.hpp
         src/ModBus.cpp
         src/crc16.hpp)
+
+target_link_libraries(${PROJECT_NAME}
+   ${Boost_LIBRARIES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${${PROJECT_NAME}_PUBLIC_INCLUDES}")
 
