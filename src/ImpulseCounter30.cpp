@@ -68,7 +68,9 @@ public:
 
   auto GetCounterOptions() -> std::optional<ImpulseCounter30::CounterOptions>
   {
-    auto const registers = _modBus.ReadHoldingRegisters(0x0007, 24);
+    auto registers = _modBus.ReadHoldingRegisters(0x0007, 13, 10000);
+    auto registersContinue = _modBus.ReadHoldingRegisters(0x0007 + 13, 11, 10000);
+    registers.insert(registers.end(), registersContinue.cbegin(), registersContinue.cend());
     if (registers.size() < 24)
     {
       return {};
@@ -78,14 +80,14 @@ public:
                            .OutputMode(static_cast<CounterOptions::eOutputMode>(registers[2]))
                            .SetPointMode(static_cast<CounterOptions::ePointMode>(registers[3]))
                            .ResetType(static_cast<CounterOptions::eResetType>(registers[4]))
-                           .SetPoint1((registers[5] << 16) || (registers[6] & 0xFFFF))
-                           .SetPoint2((registers[7] << 16) || (registers[8] & 0xFFFF))
-                           .TimeOUT1((registers[9] << 16) || (registers[10] & 0xFFFF))
-                           .TimeOUT2((registers[11] << 16) || (registers[12] & 0xFFFF))
+                           .SetPoint1((((uint32_t)registers[5]) << 16) | (((uint32_t)registers[6]) & 0xFFFF))
+                           .SetPoint2((((uint32_t)registers[7]) << 16) | (((uint32_t)registers[8]) & 0xFFFF))
+                           .TimeOUT1((((uint32_t)registers[9]) << 16) | (((uint32_t)registers[10]) & 0xFFFF))
+                           .TimeOUT2((((uint32_t)registers[11]) << 16) | (((uint32_t)registers[12]) & 0xFFFF))
                            .DecPointMult(static_cast<uint8_t>(registers[13]))
-                           .Multiplexer((registers[14] << 16) || (registers[15] & 0xFFFF))
+                           .Multiplexer((((uint32_t)registers[14]) << 16) | (((uint32_t)registers[15]) & 0xFFFF))
                            .MaxFreq(registers[16])
-                           .MinControl((registers[17] << 16) || (registers[18] & 0xFFFF))
+                           .MinControl((((uint32_t)registers[17]) << 16) | (((uint32_t)registers[18]) & 0xFFFF))
                            .LockKBD(static_cast<CounterOptions::eLockKBD>(registers[19]))
                            .ShowSetPoint(static_cast<CounterOptions::eShowSetPoint>(registers[20]))
                            .Brightness(registers[21])

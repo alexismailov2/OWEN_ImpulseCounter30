@@ -51,7 +51,7 @@ auto ModBus::ReadCoilStatus(uint16_t startRegisterAddress, uint16_t count, uint1
         (response[0] != static_cast<char>(_deviceAddress)) ||
         (response[1] != 0x01) ||
         (response[2] != count/8) ||
-        (Crc16(reinterpret_cast<uint8_t const*>(response.data()), response.size() - 2) != ((*std::prev(response.cend(), 2) << 8) | response.back())))
+        (Crc16(reinterpret_cast<uint8_t const*>(response.data()), response.size() - 2) != ((((uint8_t)*std::prev(response.cend(), 2)) << 8) | ((uint8_t)response.back()))))
     {
       return;
     }
@@ -105,7 +105,7 @@ auto ModBus::ReadInputStatus(uint16_t startRegisterAddress, uint16_t count, uint
         (response[0] != static_cast<char>(_deviceAddress)) ||
         (response[1] != 0x02) ||
         (response[2] != count/8) ||
-        (Crc16(reinterpret_cast<uint8_t const*>(response.data()), response.size() - 2) != ((*std::prev(response.cend(), 2) << 8) | response.back())))
+        (Crc16(reinterpret_cast<uint8_t const*>(response.data()), response.size() - 2) != ((((uint8_t)*std::prev(response.cend(), 2)) << 8) | ((uint8_t)response.back()))))
     {
       return;
     }
@@ -153,12 +153,17 @@ auto ModBus::ReadHoldingRegisters(uint16_t startRegisterAddress, uint16_t count,
     }
     std::cout << std::endl;
 #endif
+    auto const responseLen = response.size();
+    auto const crc16calculated = Crc16(reinterpret_cast<uint8_t const*>(response.data()), responseLen - 2);
+    uint8_t const crc16hi = *std::prev(response.cend(), 2);
+    uint8_t const crc16lo = response.back();
+    auto const crc16response = crc16hi << 8 | crc16lo;
     if (error ||
-        (response.size() < (3 + 2 + count*2)) ||
+        (responseLen < (3 + 2 + count*2)) ||
         (response[0] != static_cast<char>(_deviceAddress)) ||
         (response[1] != 0x03) ||
         (response[2] != count*2) ||
-        (Crc16(reinterpret_cast<uint8_t const*>(response.data()), response.size() - 2) != ((*std::prev(response.cend(), 2) << 8) | response.back())))
+        (crc16calculated != crc16response))
     {
       return;
     }
@@ -280,7 +285,7 @@ bool ModBus::WriteMultipleHoldingRegister(uint16_t startRegisterAddress, std::ve
         (response[1] != 0x10) ||
         (((response[2] << 8) | (response[3] & 0xFF)) != startRegisterAddress) ||
         (((response[4] << 8) | (response[5] & 0xFF)) != values.size()) ||
-        (Crc16(reinterpret_cast<uint8_t const*>(response.data()), response.size() - 2) != ((*std::prev(response.cend(), 2) << 8) | response.back())))
+        (Crc16(reinterpret_cast<uint8_t const*>(response.data()), response.size() - 2) != ((((uint8_t)*std::prev(response.cend(), 2)) << 8) | ((uint8_t)response.back()))))
     {
       return;
     }
@@ -322,7 +327,7 @@ auto ModBus::ReadInputRegisters(uint16_t startRegisterAddress, uint16_t count, u
         (response[0] != static_cast<char>(_deviceAddress)) ||
         (response[1] != 0x04) ||
         (response[2] != count*2) ||
-        (Crc16(reinterpret_cast<uint8_t const*>(response.data()), response.size() - 2) != ((*std::prev(response.cend(), 2) << 8) | response.back())))
+        (Crc16(reinterpret_cast<uint8_t const*>(response.data()), response.size() - 2) != ((((uint8_t)*std::prev(response.cend(), 2)) << 8) | ((uint8_t)response.back()))))
     {
       return;
     }

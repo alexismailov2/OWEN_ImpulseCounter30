@@ -4,7 +4,7 @@
 
 auto main(int argc, char** argv) -> int32_t
 {
-   auto impulseCounter = OWEN::ImpulseCounter30{"/dev/cu.usbserial-14410", 115200, };
+   auto impulseCounter = OWEN::ImpulseCounter30{"/dev/cu.usbserial-14510", 115200, };
    auto const communicationOptions = impulseCounter.GetCommunicationOptions();
    if (communicationOptions.has_value())
    {

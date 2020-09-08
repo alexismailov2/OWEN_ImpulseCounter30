@@ -206,7 +206,7 @@ public:
 
     CounterOptions& SetPoint1(int32_t point1Threshold)
     {
-      if ((point1Threshold > 999999) || (_point1Threshold < -99999)) {
+      if ((point1Threshold > 999999) || (point1Threshold < -99999)) {
         throw std::runtime_error("Should be in range -99999..999999.");
       }
       _point1Threshold = point1Threshold;
@@ -215,7 +215,7 @@ public:
 
     CounterOptions& SetPoint2(int32_t point2Threshold)
     {
-      if ((point2Threshold > 999999) || (_point2Threshold < -99999)) {
+      if ((point2Threshold > 999999) || (point2Threshold < -99999)) {
         throw std::runtime_error("Should be in range -99999..999999.");
       }
       _point2Threshold = point2Threshold;

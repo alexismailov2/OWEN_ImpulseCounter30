@@ -40,4 +40,5 @@ void SerialPort::SendCommand(std::string const& data, SerialPort::tResponseCallb
   }
   _io.run();
   response(responseData, readError);
+  _io.reset();
 }
