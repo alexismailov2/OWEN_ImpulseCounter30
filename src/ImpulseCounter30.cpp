@@ -190,7 +190,7 @@ public:
     auto const registers = _modBus.ReadInputRegisters(0x0000, 2);
     return (registers.size() != 2)
               ? std::optional<int32_t>{}
-              : std::optional<int32_t>{(registers[0] >> 16) | (registers[1] & 0xFFFF)};
+              : std::optional<int32_t>{(((uint32_t)registers[0]) << 16) | (((uint32_t)registers[1]) & 0xFFFF)};
   }
 
   auto GetCounterEU() -> std::optional<int32_t>
@@ -198,7 +198,7 @@ public:
     auto const registers = _modBus.ReadInputRegisters(0x0002, 2);
     return (registers.size() != 2)
            ? std::optional<int32_t>{}
-           : std::optional<int32_t>{(registers[0] >> 16) | (registers[1] & 0xFFFF)};
+           : std::optional<int32_t>{(((uint32_t)registers[0]) << 16) | (((uint32_t)registers[1]) & 0xFFFF)};
   }
 
   auto GetStartStopMode() -> std::optional<bool>
