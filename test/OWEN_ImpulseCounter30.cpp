@@ -5,11 +5,18 @@
 
 auto main(int argc, char** argv) -> int32_t
 {
-   auto impulseCounter = OWEN::ImpulseCounter30{argv[1], 115200, 16};
-   auto const communicationOptions = impulseCounter.GetCommunicationOptions();
-   if (communicationOptions.has_value())
+   auto communicationOptions = OWEN::ImpulseCounter30::CommunicationOptions{};
+   communicationOptions.PortPath(argv[1])
+           .BaudeRate(OWEN::ImpulseCounter30::CommunicationOptions::eBaudrate::_115200bps)
+           .Parity(OWEN::ImpulseCounter30::CommunicationOptions::eParity::NO)
+           .DataBits(true)
+           .BaseAddr(16);
+   //auto impulseCounter = OWEN::ImpulseCounter30{argv[1], 115200, 16};
+   auto impulseCounter = OWEN::ImpulseCounter30{communicationOptions};
+   auto const communicationOptionsGotten = impulseCounter.GetCommunicationOptions();
+   if (communicationOptionsGotten.has_value())
    {
-     std::cout << communicationOptions.value() << std::endl;
+     std::cout << communicationOptionsGotten.value() << std::endl;
    }
    else
    {

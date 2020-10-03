@@ -3,13 +3,21 @@
 #include <iostream>
 #include <string>
 
-SerialPort::SerialPort(std::string const& portPath, uint32_t baudrate)
+SerialPort::SerialPort(std::string const& portPath,
+                       uint32_t baudrate,
+                       eParity parity,
+                       eStopBits stopBits,
+                       uint8_t characterSize)
   : _io{}
   , _port{_io}
   , _timer{_io}
 {
+   using namespace boost::asio;
   _port.open(portPath);
-  _port.set_option(boost::asio::serial_port_base::baud_rate(baudrate));
+  _port.set_option(serial_port_base::baud_rate(baudrate));
+  _port.set_option(serial_port_base::stop_bits(stopBits));
+  _port.set_option(serial_port_base::parity(parity));
+  _port.set_option(serial_port_base::character_size(characterSize));
 }
 
 void SerialPort::SendCommand(std::string const& data, SerialPort::tResponseCallback&& response, size_t timeoutResponseMs)

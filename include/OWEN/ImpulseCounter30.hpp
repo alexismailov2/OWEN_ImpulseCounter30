@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <optional>
+#include <functional>
 
 namespace OWEN {
 
@@ -31,6 +32,18 @@ public:
     };
 
   public:
+     CommunicationOptions() = default;
+
+     /**
+      * Set port path.
+      * @param portPath path to the port or port name.
+      * @return reference to CommunicationOptions.
+      */
+     CommunicationOptions& PortPath(std::string portPath) {
+        _portPath = std::move(portPath);
+        return *this;
+     }
+
     /**
      * Set baudrate.
      * @param baudrate all values from eBaudrate enumeration.
@@ -109,14 +122,17 @@ public:
       return *this;
     }
 
-    std::optional<eBaudrate> _baudrate{};
-    std::optional<bool> _dataBitsExtended{};
-    std::optional<eParity> _parity{};
-    std::optional<bool> _stopBitsExtended{};
-    std::optional<bool> _lengthAddrExtended{};
-    std::optional<uint16_t> _baseAddr{};
-    std::optional<uint8_t> _delayAnswerMs{};
+    std::string              _portPath;
+    std::optional<eBaudrate> _baudrate;
+    std::optional<bool> _dataBitsExtended;
+    std::optional<eParity> _parity;
+    std::optional<bool> _stopBitsExtended;
+    std::optional<bool> _lengthAddrExtended;
+    std::optional<uint16_t> _baseAddr;
+    std::optional<uint8_t> _delayAnswerMs;
   };
+
+  using tFindProgress = std::function<bool(uint32_t currentProgress, uint32_t finishValue, CommunicationOptions const& communicationOptions)>;
 
   class CounterOptions {
   public:
@@ -340,7 +356,9 @@ public:
   };
 
 public:
-  ImpulseCounter30(std::string const& portPath = "/dev/cu.usbserial-14610", uint32_t baudrate = 115200, uint8_t deviceAddress = 0x10);
+  ImpulseCounter30(CommunicationOptions const& communicationOptions = {},
+                   bool neededToBeFound = false,
+                   tFindProgress progress = [](uint32_t currentProgress, uint32_t finishValue, CommunicationOptions const& communicationOptions) -> bool{ return true; });
   ~ImpulseCounter30();
   ImpulseCounter30(ImpulseCounter30&&) noexcept;
   ImpulseCounter30& operator=(ImpulseCounter30&&) noexcept;

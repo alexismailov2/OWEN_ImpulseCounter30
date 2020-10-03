@@ -7,13 +7,141 @@
 
 namespace OWEN {
 
+namespace {
+
+auto ToSerialPortType(ImpulseCounter30::CommunicationOptions::eParity parity) -> SerialPort::eParity
+{
+   using eParity = ImpulseCounter30::CommunicationOptions::eParity;
+   switch(parity)
+   {
+      case eParity::EVEN:
+         return SerialPort::eParity::even;
+      case eParity::ODD:
+         return SerialPort::eParity::odd;
+      case eParity::NO:
+      default:
+         return SerialPort::eParity::none;
+   }
+}
+
+static auto ToSerialPortType(ImpulseCounter30::CommunicationOptions::eBaudrate baudrate) -> uint32_t
+{
+   using eBaudrate = ImpulseCounter30::CommunicationOptions::eBaudrate;
+   switch(baudrate)
+   {
+      case eBaudrate::_2400bps:
+         return 2400;
+      case eBaudrate::_4800bps:
+         return 4800;
+      case eBaudrate::_9600bps:
+         return 9600;
+      case eBaudrate::_14400bps:
+         return 14400;
+      case eBaudrate::_19200bps:
+         return 19200;
+      case eBaudrate::_28800bps:
+         return 28800;
+      case eBaudrate::_38400bps:
+         return 38400;
+      case eBaudrate::_57600bps:
+         return 57600;
+      case eBaudrate::_115200bps:
+         return 115200;
+      default: return 0;
+   }
+}
+
+auto AutoFind(ImpulseCounter30::CommunicationOptions& communicationOptions, ImpulseCounter30::tFindProgress progress) -> SerialPort
+{
+   auto serialPortCreator = [](ImpulseCounter30::CommunicationOptions const& communicationOptions) -> SerialPort {
+     return SerialPort(communicationOptions._portPath,
+                       ToSerialPortType(communicationOptions._baudrate.value()),
+                       ToSerialPortType(communicationOptions._parity.value()),
+                       communicationOptions._stopBitsExtended.value() ? SerialPort::eStopBits::two : SerialPort::eStopBits::one,
+                       communicationOptions._dataBitsExtended.value() ? static_cast<uint8_t>(8) : static_cast<uint8_t>(7));
+   };
+   using eBaudrate = ImpulseCounter30::CommunicationOptions::eBaudrate;
+   using eParity = ImpulseCounter30::CommunicationOptions::eParity;
+
+
+   auto const totalIterations = (static_cast<uint32_t>(eBaudrate::_115200bps) + 1) *
+                                2 *
+                                (static_cast<uint32_t>(eParity::EVEN) + 1) *
+                                2 *
+                                255;
+   auto currentIt = 0;
+   auto& co = communicationOptions;
+   for (co._baseAddr = 1; co._baseAddr.value() < 255; ++co._baseAddr.value())
+   {
+      for (co._baudrate = eBaudrate::_2400bps; co._baudrate.value() <= eBaudrate::_115200bps;)
+      {
+         auto dataBitsExtended = 0;
+         for (co._dataBitsExtended = false; dataBitsExtended < 2; ++dataBitsExtended)
+         {
+            for (co._parity = eParity::NO; co._parity.value() <= eParity::ODD;)
+            {
+               auto stopBitsExtended = 0;
+               for (co._stopBitsExtended = false; stopBitsExtended < 2; ++stopBitsExtended)
+               {
+                  //for (co._lengthAddrExtended = false; co._lengthAddrExtended.value() < true; ++co._lengthAddrExtended.value())
+                  {
+                     ++currentIt;
+                     std::cout << "Trying to get response from device with next serial configuration: \n" << co << std::endl;
+                     try
+                     {
+                        auto serialPort = serialPortCreator(co);
+                        std::cout << "Trying to send request" << std::endl;
+                        auto modbus = ModBus(serialPort, co._baseAddr.value());
+                        if (!modbus.ReadHoldingRegisters(0x0000, 1, 100).empty())
+                        {
+                           progress(totalIterations, totalIterations, co);
+                           return serialPortCreator(co);
+                        }
+                        if (!progress(currentIt, totalIterations, co))
+                        {
+                           return serialPortCreator(co);
+                        }
+                     }
+                     catch(boost::system::system_error ex)
+                     {
+                        std::cout << ex.what() << std::endl;
+                     }
+                  }
+                  co._stopBitsExtended = stopBitsExtended == 0;
+               }
+               auto parity = static_cast<uint32_t>(co._parity.value());
+               ++parity;
+               co._parity = static_cast<eParity>(parity);
+            }
+            co._dataBitsExtended = dataBitsExtended == 0;
+         }
+         auto baudrate = static_cast<uint32_t>(co._baudrate.value());
+         ++baudrate;
+         co._baudrate = static_cast<eBaudrate>(baudrate);
+      }
+   }
+}
+} /// end namespace anonymous
+
 class ImpulseCounter30::Impl
 {
 public:
-  Impl(std::string const& portPath, uint32_t baudrate, uint8_t deviceAdress)
-    : _serialPort{portPath, baudrate}
-    , _modBus{_serialPort, deviceAdress}
+  Impl(CommunicationOptions communicationOptions,
+       bool neededToBeFound,
+       tFindProgress progress)
+    : _serialPort{!neededToBeFound
+        ? SerialPort(communicationOptions._portPath,
+                     ToSerialPortType(communicationOptions._baudrate.value()),
+                     ToSerialPortType(communicationOptions._parity.value()),
+                     communicationOptions._stopBitsExtended.value() ? SerialPort::eStopBits::two : SerialPort::eStopBits::one,
+                     communicationOptions._dataBitsExtended.value() ? static_cast<uint8_t>(8) : static_cast<uint8_t>(7))
+        : AutoFind(communicationOptions, progress)}
+    , _modBus{_serialPort, static_cast<uint8_t>(communicationOptions._baseAddr.value())}
   {
+     if (_modBus.ReadHoldingRegisters(0x0000, 1, 100).empty())
+     {
+        throw std::runtime_error("Could not connected");
+     }
   }
 
   auto GetCommunicationOptions() -> std::optional<CommunicationOptions>
@@ -286,13 +414,14 @@ public:
   {
     return StartCounter(!isStop);
   }
+
 private:
   SerialPort _serialPort;
   ModBus _modBus;
 };
 
-ImpulseCounter30::ImpulseCounter30(std::string const& portPath, uint32_t baudrate, uint8_t deviceAddress)
-  : pImpl{std::make_unique<Impl>(portPath, baudrate, deviceAddress)}
+ImpulseCounter30::ImpulseCounter30(CommunicationOptions const& communicationOptions, bool neededToBeFound, tFindProgress progress)
+  : pImpl{std::make_unique<Impl>(communicationOptions, neededToBeFound, progress)}
 {
 }
 
