@@ -138,7 +138,7 @@ public:
         : AutoFind(communicationOptions, progress)}
     , _modBus{_serialPort, static_cast<uint8_t>(communicationOptions._baseAddr.value())}
   {
-     if (_modBus.ReadHoldingRegisters(0x0000, 1, 100).empty())
+     if (_modBus.ReadHoldingRegisters(0x0000, 1, 1000).empty())
      {
         throw std::runtime_error("Could not connected");
      }
@@ -323,10 +323,18 @@ public:
 
   auto GetCounterEU() -> std::optional<int32_t>
   {
+#if 0
     auto const registers = _modBus.ReadInputRegisters(0x0002, 2);
     return (registers.size() != 2)
            ? std::optional<int32_t>{}
            : std::optional<int32_t>{(((uint32_t)registers[0]) << 16) | (((uint32_t)registers[1]) & 0xFFFF)};
+#else
+    auto const registers1 = _modBus.ReadInputRegisters(0x0002, 1);
+    auto const registers2 = _modBus.ReadInputRegisters(0x0003, 1);
+    return ((registers1.size() != 1) || (registers2.size() != 1))
+           ? std::optional<int32_t>{}
+           : std::optional<int32_t>{(((uint32_t)registers1[0]) << 16) | (((uint32_t)registers2[0]) & 0xFFFF)};
+#endif
   }
 
   auto GetStartStopMode() -> std::optional<bool>

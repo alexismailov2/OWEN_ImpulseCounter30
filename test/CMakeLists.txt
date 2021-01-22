@@ -1,6 +1,6 @@
 include_directories(include)
 
-add_definitions(-DDEBUG_INFO=1)
+add_definitions(-DDEBUG_INFO=0)
 
 add_executable(test_${PROJECT_NAME}
         OWEN_ImpulseCounter30.cpp)

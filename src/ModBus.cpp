@@ -154,6 +154,10 @@ auto ModBus::ReadHoldingRegisters(uint16_t startRegisterAddress, uint16_t count,
     std::cout << std::endl;
 #endif
     auto const responseLen = response.size();
+    if (responseLen <= 2)
+    {
+        return;
+    }
     auto const crc16calculated = Crc16(reinterpret_cast<uint8_t const*>(response.data()), responseLen - 2);
     uint8_t const crc16hi = *std::prev(response.cend(), 2);
     uint8_t const crc16lo = response.back();
