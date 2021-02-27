@@ -4,6 +4,7 @@
 #include <string>
 #include <optional>
 #include <functional>
+#include <stdexcept>
 
 namespace OWEN {
 

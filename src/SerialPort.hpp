@@ -18,8 +18,14 @@ public:
              eStopBits = eStopBits::one,
              uint8_t characterSize = 8);
 
-  SerialPort(SerialPort&&) = default;
-  SerialPort& operator=(SerialPort&&) = default;
+  SerialPort(SerialPort&&) noexcept = default;
+  SerialPort& operator=(SerialPort&&) noexcept = default;
+
+  // TODO: Stupid Microsoft Visual Studio Compiler do not support generation move constructor for rvalue when it can be
+  //  used instead of copy. (((((((((((((
+  // And may be Return value optimization does not work too((((
+  //SerialPort(SerialPort const&) = default;
+  //SerialPort& operator=(SerialPort const&) = default;
 
   void SendCommand(std::string const& data,
                    tResponseCallback && response = [](std::string const&, bool error){},
