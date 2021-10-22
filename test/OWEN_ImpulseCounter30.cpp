@@ -42,7 +42,7 @@ auto main(int argc, char** argv) -> int32_t
      auto counterValue = impulseCounter.GetCounterValue().value();
      auto counterEU = impulseCounter.GetCounterEU().value();
      std::cout << "Counter EU:" << std::dec << counterEU << std::endl;
-     std::cout << "Counter value: " << std::dec << (counterValue - 1100) << std::endl;
+     std::cout << "Counter value: " << std::dec << counterValue << std::endl;
      //std::this_thread::sleep_for(std::chrono::milliseconds(500));
      file << counterEU << '\t' << counterValue << std::endl;
    }

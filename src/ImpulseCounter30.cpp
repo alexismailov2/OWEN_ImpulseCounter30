@@ -130,13 +130,13 @@ public:
   Impl(CommunicationOptions communicationOptions,
        bool neededToBeFound,
        tFindProgress progress)
-    : _serialPort(/*!neededToBeFound
-        ? */SerialPort(communicationOptions._portPath,
+    : _serialPort(!neededToBeFound
+        ? SerialPort(communicationOptions._portPath,
                      ToSerialPortType(communicationOptions._baudrate.value()),
                      ToSerialPortType(communicationOptions._parity.value()),
                      communicationOptions._stopBitsExtended.value() ? SerialPort::eStopBits::two : SerialPort::eStopBits::one,
                      communicationOptions._dataBitsExtended.value() ? static_cast<uint8_t>(8) : static_cast<uint8_t>(7))
-       /* : AutoFind(communicationOptions, progress)*/)
+        : AutoFind(communicationOptions, progress))
     , _modBus{_serialPort, static_cast<uint8_t>(communicationOptions._baseAddr.value())}
   {
      if (_modBus.ReadHoldingRegisters(0x0000, 1, 1000).empty())
